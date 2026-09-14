@@ -1,0 +1,567 @@
+
+# 🔴 TIKTOK LIVE 
+
+## **1. CONNECTION & INITIALIZATION**
+
+### Room Resolution
+- `RoomResolver.resolve()` - Main room resolver
+- `RoomResolver._by_username()` - Get room_id from @username
+- `RoomResolver._by_room_id()` - Get room_id directly
+- `RoomInfoExtractor.get_room_id()` - Extract room ID from username
+- `RoomInfoExtractor.get_info()` - Fetch complete room information
+- `RoomFetcher.get_room_id()` - Room ID fetcher
+- `RoomFetcher._extract_room_id()` - Parse room ID from HTML/JSON
+- `RoomFetcher.get_room_info()` - Get detailed room metadata
+- `RoomFetcher._get_room_info_mobile()` - Fallback mobile API fetch
+- `RoomFetcher._parse_room_info()` - Parse API response
+
+### Session Management
+- `SessionManager.__init__()` - Create session
+- `SessionManager.init()` - Initialize with cookies/tokens
+- `SessionManager.init_session()` - Fetch initial session data
+- `SessionManager._generate_mstoken()` - Generate msToken
+- `SessionManager._generate_verify_fp()` - Generate verify_fp
+- `SessionManager.get_cookie_header()` - Format cookie header
+- `SessionManager.get_auth_headers()` - Get all auth headers
+- `SessionManager.cookie_header()` - Cookie string builder
+- `SessionManager.fresh()` - Create fresh session copy
+- `SessionManager.build_signed_url()` - Build fully signed URL
+
+### URL Building & Signing
+- `sign()` - Universal URL signer (X-Bogus + params)
+- `sign_mobile()` - Mobile API signer
+- `TikTokViewer._url()` - Build WebSocket URL
+- `WebcastClient._ws_url()` - Build signed WebSocket URL
+- `TikTokLiveViewEngine.build_live_url()` - Build live API URL
+
+---
+
+## **2. AUTHENTICATION & SIGNATURES**
+
+### X-Bogus Generation
+- `XBogusEngine.ensure_js()` - Load X-Bogus.js
+- `XBogusEngine._compile()` - Compile JS engine
+- `XBogusEngine._node_call()` - Call Node.js subprocess
+- `XBogusEngine.sign()` - Generate X-Bogus signature
+- `SignatureGenerator.x_bogus()` - Generate X-Bogus (v3)
+
+### Gorgon/Khronos Headers
+- `Gorgon.__init__()` - Initialize Gorgon
+- `Gorgon._normalize()` - Normalize input
+- `Gorgon._md5_hex()` - MD5 hashing
+- `Gorgon.get_value()` - Generate X-Gorgon/X-Khronos/x-ss-req-ticket
+- `SignerService.sign_headers()` - SignerPy Gorgon wrapper
+- `sign_tiktok()` - Complete TikTok signing pipeline
+
+### Argus/Ladon (Mobile)
+- `Argus.get_bodyhash()` - SM3 body hash
+- `Argus.get_queryhash()` - SM3 query hash
+- `Argus.get_sign()` - Generate X-Argus signature
+- `SignerService.sign_argus_ladon()` - tiktok-signer wrapper
+- `Ladon.encrypt()` - Generate X-Ladon signature
+
+### SM3 Hash Algorithm
+- `SM3._rotate_left()` - Bit rotation
+- `SM3._FFJ()` - FF function
+- `SM3._GGJ()` - GG function
+- `SM3._P_0()` - P_0 permutation
+- `SM3._P_1()` - P_1 permutation
+- `SM3._CF()` - Compression function
+- `SM3.sm3_hash()` - Complete SM3 hash
+
+### Additional Tokens
+- `SignerService.ms_token()` - Generate msToken
+- `SignerService.verify_fp()` - Generate verify_fp
+- `generate_trace_id()` - Generate trace-id header
+- `generate_xtoken()` - Generate x-xtoken
+- `generate_params()` - Generate standard device params
+
+---
+
+## **3. WEBSOCKET CONNECTION**
+
+### Connection Lifecycle
+- `TikTokViewer.__init__()` - Initialize viewer (v3)
+- `TikTokViewer.connect()` - Establish WebSocket connection
+- `LiveViewer.__init__()` - Initialize viewer (v4)
+- `LiveViewer.connect()` - Connect to WebSocket
+- `WebcastClient.__init__()` - Initialize viewer (v5)
+- `WebcastClient.run()` - Main connection loop
+- `WebcastClient._connect_once()` - Single connection attempt
+
+### URL Building
+- `TikTokViewer._url()` - Build signed WS URL
+- `LiveViewer._build_ws_url()` - Build WebSocket URL with params
+- `WebcastClient._ws_url()` - Build fully signed WS URL
+
+### Handshake & Setup
+- `LiveViewer._on_open()` - WebSocket opened
+- `LiveViewer._send_initial_frames()` - Send handshake frames
+- `WebcastClient._connect_once()` - Complete connection setup
+- `LiveViewer._build_push_frame()` - Build protobuf frame
+
+### Connection Cleanup
+- `TikTokViewer._cleanup_ws()` - Cleanup WebSocket
+- `LiveViewer.disconnect()` - Disconnect viewer
+- `WebcastClient._cleanup_ws()` - WebSocket cleanup
+- `WebcastClient.stop()` - Stop viewer thread
+
+---
+
+## **4. HEARTBEAT & KEEP-ALIVE**
+
+### Heartbeat Protocol
+- `TikTokViewer.hb()` - Send heartbeat (JSON)
+- `TikTokViewer._hb_loop()` - Heartbeat thread loop
+- `LiveViewer._heartbeat_loop()` - Thread-based heartbeat
+- `WebcastClient._send_ping()` - Send PING frame
+- `build_ping()` - Build PING protobuf frame
+
+### Frame Building
+- `build_ack()` - Build ACK protobuf frame
+- `LiveViewer._build_push_frame()` - Build generic frame
+- `_varint_encode()` - Encode protobuf varint
+- `_varint_decode()` - Decode protobuf varint
+
+### Event Loop
+- `TikTokViewer._msgs()` - Message receive loop
+- `LiveViewer._event_loop()` - Main event processing
+- `WebcastClient._event_loop()` - Handle frames & scheduling
+
+---
+
+## **5. CHAT INTERACTIONS**
+
+### Chat Sending
+- `TikTokViewer.send_chat()` - Send chat message
+- `WebcastClient._send_chat()` - Queue chat message
+- `BehaviorEngine.tick()` - Schedule chat sends
+
+### Chat Management
+- `menu_chat_wordlist()` - Edit chat word list
+- `ChatMessage` - Chat payload structure
+- `CFG.chat_wordlist` - Predefined messages
+- `CFG.chat_interval_min` - Min send interval
+- `CFG.chat_interval_max` - Max send interval
+- `_chat_loop()` - Loop for chat scheduling
+
+### Message Parsing
+- `extract_strings()` - Extract text from binary
+- `_handle_message()` - Parse message types
+- `parse_push_frame()` - Parse frame structure
+
+---
+
+## **6. LIKE INTERACTIONS**
+
+### Like Sending
+- `TikTokViewer.send_like()` - Send like event
+- `WebcastClient._send_like()` - Queue like event
+- `BehaviorEngine.tick()` - Schedule like sends
+
+### Like Scheduling
+- `_like_loop()` - Continuous like loop
+- `CFG.like_burst_min` - Min likes per burst
+- `CFG.like_burst_max` - Max likes per burst
+- `CFG.like_interval_min` - Min interval between bursts
+- `CFG.like_interval_max` - Max interval between bursts
+- `like_interval` - Configurable like frequency
+
+### Like Data Structure
+- `WebcastLikeMessage` - Like message type
+- `send_like()` - Like with count
+- `total_likes` - Tracker for like count
+
+---
+
+## **7. FOLLOW INTERACTIONS**
+
+### Follow Sending
+- `TikTokViewer.send_follow()` - Send follow action
+- `WebcastClient._send_follow()` - Queue follow event (v4)
+- `follow_bot` - Enable/disable follow bot
+
+### Follow Management
+- `_follow_loop()` - Follow scheduling loop
+- `CFG.follow_interval` - Follow frequency
+- `follows_sent` - Counter for follows
+- `total_follows` - Total follow tracker
+
+### Follow Protocol
+- `WebcastSocialMessage` - Social action message
+- `action="follow"` - Follow action parameter
+
+---
+
+## **8. SHARE INTERACTIONS**
+
+### Share Sending
+- `TikTokViewer.send_share()` - Send share action
+- `WebcastClient._send_share()` - Queue share event (v4)
+- `share_sim` - Enable/disable share simulator
+
+### Share Management
+- `_share_loop()` - Share scheduling loop
+- `CFG.share_interval` - Share frequency
+- `shares_sent` - Counter for shares
+- `total_shares` - Total share tracker
+
+### Share Protocol
+- `WebcastSocialMessage` - Social action message
+- `action="share"` - Share action parameter
+
+---
+
+## **9. GIFT DETECTION & LOGGING**
+
+### Gift Logging
+- `GiftLogger.__init__()` - Initialize gift logger
+- `GiftLogger.handle()` - Process gift event
+- `GiftLogger.log()` - Log gift to file
+- `GiftLogger.summary()` - Get gift statistics
+
+### Gift Data Extraction
+- `extract_strings()` - Extract gift name from payload
+- `WebcastGiftMessage` - Gift message type
+- `gift_data.get("gift_name")` - Gift name parsing
+- `gift_data.get("diamond_count")` - Diamond value
+- `gift_data.get("repeat_count")` - Repeat count
+
+### Gift Tracking
+- `gift_logger.gifts` - List of gift events
+- `gift_logger.gift_totals` - Count by gift type
+- `gift_logger.gift_diamonds` - Diamond totals
+- `self.gift_logger.handle()` - Gift event handler
+
+---
+
+## **10. MESSAGE HANDLING & PARSING**
+
+### Frame Parsing
+- `parse_push_frame()` - Parse WebcastPushFrame
+- `_fields()` - Decode protobuf fields
+- `_varint_decode()` - Varint decoding
+- `_handle_frame()` - Process frame
+- `LiveViewer._on_message()` - Message callback
+
+### Message Types
+- `WebcastChatMessage` - Chat data
+- `WebcastLikeMessage` - Like data
+- `WebcastMemberMessage` - Join message
+- `WebcastGiftMessage` - Gift data
+- `WebcastControlMessage` - Control message
+- `WebcastRoomUserSeqMessage` - User sequence
+
+### Message Processing
+- `_handle_message()` - Generic message handler
+- `extract_strings()` - String extraction
+- `WebcastClient._handle_frame()` - Frame routing
+
+---
+
+## **11. PACKET INSPECTION & MONITORING**
+
+### Packet Inspector
+- `PacketInspector.__init__()` - Initialize inspector
+- `PacketInspector.capture()` - Capture packet
+- `PacketInspector.inspect()` - Analyze packet (v3)
+- `PacketInspector.summary()` - Get packet stats
+- `PacketInspector.toggle()` - Enable/disable inspector
+
+### Packet Tracking
+- `PacketInspector.packets` - Packet list
+- `PacketInspector.packet_types` - Type counters
+- `PacketInspector.bytes_total` - Total bytes
+- `bytes_in` - Received bytes
+- `bytes_out` - Sent bytes
+
+### Stream Monitoring
+- `StreamMonitor.__init__()` - Initialize monitor
+- `StreamMonitor.run()` - Monitor loop
+- `StreamMonitor.stop()` - Stop monitoring
+- `viewer_count` - Track current viewers
+
+---
+
+## **12. STATISTICS & TRACKING**
+
+### Stats Collection
+- `StatsHub.__init__()` - Initialize stats
+- `StatsHub.register()` - Register viewer
+- `StatsHub.connected()` - Track connection
+- `StatsHub.disconnected()` - Track disconnection
+- `StatsHub.like()` - Track like
+- `StatsHub.chat()` - Track chat
+- `StatsHub.event()` - Track any event
+- `StatsHub.snapshot()` - Get current stats
+
+### Stats Display
+- `StatsHub.live_table()` - Generate live table
+- `StatsHub.dashboard_loop()` - Dashboard loop
+- `Dashboard.render()` - Render stats display
+- `Dashboard.run()` - Dashboard loop
+- `SessionTracker.summary()` - Session summary
+
+### Viewer Stats
+- `ViewerStats` - Dataclass for stats
+- `WebcastClient.status()` - Viewer status
+- `frames` - Frame count
+- `acks` - ACK count
+- `errors` - Error count
+- `uptime` - Connection time
+- `latency_ms` - Ping latency
+
+---
+
+## **13. BEHAVIOR SIMULATION**
+
+### Behavior Engine
+- `BehaviorEngine.__init__()` - Initialize behavior
+- `BehaviorEngine.on_connect()` - On connection
+- `BehaviorEngine.tick()` - Behavior loop tick
+- `BehaviorEngine.profile` - Behavior profile (casual/active/hyper/lurker)
+
+### Behavior Profiles
+- `behavior_profile` - Profile selection
+- `realistic` - Realistic behavior
+- `stealth` - Stealthy behavior
+- `aggressive` - Aggressive behavior
+- `custom` - Custom behavior
+
+### Randomization
+- `like_interval_min/max` - Like timing
+- `chat_interval_min/max` - Chat timing
+- `like_burst_min/max` - Like burst count
+- `follow_interval` - Follow timing
+- `share_interval` - Share timing
+
+---
+
+## **14. FINGERPRINTING & DEVICE SPOOFING**
+
+### Device Fingerprint
+- `FingerprintEngine.__init__()` - Initialize fingerprint
+- `FingerprintEngine.generate()` - Generate fingerprint
+- `FingerprintEngine.PROFILES` - Fingerprint profiles
+
+### Device Parameters
+- `CFG.device_id` - Device ID (19 digits)
+- `CFG.device_platform` - Platform (web_pc/android/ios)
+- `CFG.browser_name` - Browser name
+- `CFG.browser_version` - Browser version
+- `fp["user_agent"]` - User agent
+- `fp["web_id"]` - Web ID
+- `fp["session_id"]` - Session ID
+
+### User Agent Generation
+- `UserAgentGenerator.random()` - Random UA
+- `UserAgentGenerator.random_android_ua()` - Android UA
+- `UserAgentGenerator.random_ios_ua()` - iOS UA
+- `UserAgentGenerator.random_device_id()` - Random device ID
+- `UserAgentGenerator.random_ip()` - Random IP address
+
+---
+
+## **15. GEOLOCATION SPOOFING**
+
+### Geo Engine
+- `GeoEngine.__init__()` - Initialize geo spoofer
+- `GeoEngine.get_geo_headers()` - Get geo headers
+- `GeoSpoofer.__init__()` - Initialize geo spoofer (v5)
+- `GeoSpoofer.rotate()` - Change region
+- `GeoSpoofer.params()` - Get geo params
+- `GeoSpoofer.headers()` - Get geo headers
+
+### Region Configuration
+- `CFG.spoof_region` - Enable/disable spoofing
+- `CFG.region` - Current region
+- `CFG.regions_pool` - Available regions
+- `GeoSpoofer.TZ_MAP` - Timezone mappings
+- `CF-IPCountry` - Country header
+- `X-Forwarded-For` - IP chain
+
+---
+
+## **16. PROXY MANAGEMENT**
+
+### Proxy Pool
+- `ProxyPool.__init__()` - Initialize pool
+- `ProxyPool._load()` - Load from file
+- `ProxyPool.add()` - Add proxy
+- `ProxyPool.get()` - Get next proxy
+- `ProxyPool.test()` - Test proxy health
+- `ProxyPool.healthy()` - Get healthy proxies
+
+### Proxy Manager (v3)
+- `ProxyManager.__init__()` - Initialize manager
+- `ProxyManager.get()` - Get next proxy
+- `ProxyManager.get_random_proxy()` - Random proxy
+- `ProxyManager.mark_failed()` - Mark as bad
+- `ProxyManager.parse_file()` - Parse proxy file
+- `ProxyManager.stats` - Track statistics
+
+### Proxy Configuration
+- `CFG.proxy_file` - Proxy file path
+- `proxy_rotation` - round_robin/random
+- `proxy_timeout` - Connection timeout
+
+---
+
+## **17. MULTI-VIEWER ORCHESTRATION**
+
+### Orchestrator
+- `Orchestrator.__init__()` - Initialize orchestrator (v3)
+- `Orchestrator._spawn()` - Spawn single viewer
+- `Orchestrator.run()` - Run all viewers
+- `Orchestrator.run_auto_scale()` - Auto-scale viewers
+- `ViewerOrchestrator.__init__()` - Initialize (v5)
+- `ViewerOrchestrator.resolve_room()` - Get room info
+- `ViewerOrchestrator.spawn()` - Spawn viewers
+- `ViewerOrchestrator.kill()` - Kill viewers
+- `ViewerOrchestrator.kill_all()` - Kill all viewers
+- `ViewerOrchestrator.set_target()` - Set target count
+- `ViewerOrchestrator.auto_scale()` - Ramp up viewers
+
+### Viewer Management
+- `CFG.viewer_count` - Target count
+- `CFG.max_viewers` - Maximum viewers
+- `CFG.ramp_step` - Viewers per step
+- `CFG.ramp_interval` - Step interval
+- `AccountRotator` - Account rotation
+- `AccountRotator.get()` - Next account
+
+---
+
+## **18. AUTO-SCALING & STRESS TESTING**
+
+### Auto-Scale
+- `auto_scale` - Enable auto-scaling
+- `Orchestrator.run_auto_scale()` - Scale ramping
+- `ViewerOrchestrator.auto_scale()` - Gradual scaling
+- `CFG.ramp_step` - Viewers per step
+- `CFG.ramp_interval` - Interval between steps
+
+### Stress Testing
+- `stress()` - Stress test mode
+- `App.stress()` - Stress test menu
+- Test sizes: 10, 25, 50, 100, 200, 500 viewers
+
+---
+
+## **19. CONFIGURATION & PERSISTENCE**
+
+### Config Management
+- `Config` - Configuration dataclass (v3-v5)
+- `Config.to_dict()` - Convert to dict
+- `Config.from_dict()` - Load from dict
+- `CFG` - Global config instance
+
+### Save/Load
+- `App.save_load()` - Save/load menu
+- Save format: JSON file with timestamp
+- Load previous configurations
+- Auto-discovery of config files
+
+### Configuration Options
+```
+- target_username / room_id
+- viewer_count / max_viewers
+- gorgon_version (8404/4404/8402)
+- heartbeat_interval
+- proxy_file / proxy_rotation
+- behavior_profile
+- auto_like / like_interval
+- chat_spam / chat_messages
+- follow_bot / share_sim
+- geo_spoof / geo_region
+- monitor_mode / gift_log
+- packet_inspect / auto_scale
+```
+
+---
+
+## **20. MENU & INTERACTION SYSTEM**
+
+### Main Menu
+- `App.main()` - Main loop (v3)
+- `App.banner()` - Show banner
+- `App.menu()` - Show menu
+- `print_menu()` - Print menu (v5)
+- `main()` - Main entry point
+
+### Submenus
+- `App.config_menu()` - Config editor
+- `App.feature_menu()` - Feature toggles
+- `App.proxy_menu()` - Proxy manager
+- `App.fp_menu()` - Fingerprint profiles
+- `App.room_info()` - Room lookup
+- `App.history()` - Session history
+- `App.stress()` - Stress test
+- `App.behavior()` - Behavior profiles
+- `App.save_load()` - Config persistence
+- `App.monitor_run()` - Stream monitor
+
+### Menu Actions
+- `menu_start_viewers()` - Start viewers
+- `menu_stop_viewers()` - Stop viewers
+- `menu_toggle_inspector()` - Toggle inspection
+- `menu_auto_scale()` - Auto-scale dialog
+- `menu_chat_wordlist()` - Edit chat
+- `menu_proxy_manager()` - Proxy settings
+- `menu_geo_spoof()` - Geo settings
+- `menu_stream_monitor()` - Monitor stream
+- `menu_settings()` - Global settings
+
+---
+
+## **21. DIAGNOSTICS & VALIDATION**
+
+### Signature Testing
+- `run_diagnostics()` - Test all signing
+- `XBogusEngine.sign()` - X-Bogus test
+- `SignerService.sign_headers()` - Gorgon test
+- `SignerService.sign_argus_ladon()` - Argus test
+- Live API test request
+
+### Status Reporting
+- `ViewerOrchestrator.status_report()` - Full status
+- `Dashboard.render()` - Dashboard display
+- `StatsHub.live_table()` - Viewer table
+- `WebcastClient.status()` - Individual status
+
+---
+
+## **22. VIDEO VIEW BOT (Zefoy)**
+
+### Video View Engine
+- `TikTokVideoViewEngine.__init__()` - Initialize
+- `TikTokVideoViewEngine.initialize()` - Init Zefoy
+- `TikTokVideoViewEngine.send_video_view()` - Send view
+- `TikTokVideoViewEngine.send_video_views_loop()` - Loop views
+
+### Captcha Handling
+- Captcha image download
+- Auto-solve via external service
+- Manual solve fallback
+
+---
+
+## **23. LIVE STREAM VIEW ENGINE**
+
+### Live View Engine
+- `TikTokLiveViewEngine.__init__()` - Initialize
+- `TikTokLiveViewEngine.build_live_url()` - Build URL
+- `TikTokLiveViewEngine.build_headers()` - Build headers
+- `TikTokLiveViewEngine.send_live_view()` - Send view
+- `TikTokLiveViewEngine.send_live_views_threaded()` - Thread views
+
+### Live Parameters
+- `video_id` - Live stream ID
+- `live_stream` - Flag (1)
+- `file_type` - Format (mp4)
+- `device_type` - Device model
+- `ac` - Connection type (4G/5G/WIFI)
+
+---
+
+## **24. 
